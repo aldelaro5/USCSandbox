@@ -56,9 +56,9 @@ namespace USCSandbox
             }
 
             var bundlePath = argList[0];
+            var bundleFile = manager.LoadBundleFile(bundlePath);
             if (argList.Count == 1)
             {
-                var bundleFile = manager.LoadBundleFile(bundlePath, true);
                 var dirInfs = bundleFile.file.BlockAndDirInfo.DirectoryInfos;
                 Console.WriteLine("Available files in bundle:");
                 foreach (var dirInf in dirInfs)
@@ -76,7 +76,6 @@ namespace USCSandbox
             {
                 if (bundlePath != "null")
                 {
-                    var bundleFile = manager.LoadBundleFile(bundlePath, true);
                     afileInst = manager.LoadAssetsFileFromBundle(bundleFile, assetsFileName);
 
                     manager.LoadClassPackage("classdata.tpk");
@@ -107,10 +106,8 @@ namespace USCSandbox
             if (argList.Count > 2)
                 shaderPathId = long.Parse(argList[2]);
 
-            Dictionary<long, string> files = [];
             if (bundlePath != "null")
             {
-                var bundleFile = manager.LoadBundleFile(bundlePath, true);
                 afileInst = manager.LoadAssetsFileFromBundle(bundleFile, assetsFileName);
 
                 if (ver is null)
@@ -153,6 +150,12 @@ namespace USCSandbox
             else
                 shadersToLoad.AddRange(afileInst.file.GetAssetsOfType(AssetClassID.Shader));
 
+            var assetInst = manager.LoadAssetsFileFromBundle(bundleFile, 0, true);
+
+            var abInfo = assetInst.file.GetAssetsOfType(AssetClassID.ResourceManager)[0];
+            var abBf = manager.GetBaseField(assetInst, abInfo);
+
+            var mContainer = abBf["m_Container.Array"];
             foreach (var shaderInf in shadersToLoad)
             {
                 var shaderBf = manager.GetBaseField(afileInst, shaderInf);
@@ -162,12 +165,24 @@ namespace USCSandbox
                     return;
                 }
 
+                var name = "";
+                foreach (var data in mContainer.Children)
+                {
+                    var pathId = data[1]["m_PathID"].AsLong;
+                    if (pathId != shaderInf.PathId)
+                        continue;
+                    name = data[0].AsString;
+                    break;
+                }
+                if (name == "")
+                    continue;
+
                 var shaderName = shaderBf["m_ParsedForm"]["m_Name"].AsString;
                 var shaderProcessor = new ShaderProcessor(shaderBf, ver.Value, platform);
                 string shaderText = shaderProcessor.Process();
 
-                Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "out", Path.GetDirectoryName(shaderName)!));
-                File.WriteAllText($"{Path.Combine(Environment.CurrentDirectory, "out", shaderName)}.shader", shaderText);
+                Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "out", Path.GetDirectoryName(name)!));
+                File.WriteAllText($"{Path.Combine(Environment.CurrentDirectory, "out", name)}.shader", shaderText);
                 Console.WriteLine($"{shaderName} decompiled");
             }
         }

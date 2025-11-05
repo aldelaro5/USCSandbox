@@ -65,11 +65,11 @@ namespace USCSandbox.Processor
             lz4Decoder.Dispose();
 
             var blobManager = new BlobManager(decompressedBlob, _engVer);
-            for (var i = 0; i < blobManager.Entries.Count; i++)
-            {
-                var entryBytes = blobManager.GetRawEntry(i);
-                File.WriteAllBytes($"dbg_entry_{i}.bin", entryBytes);
-            }
+            // for (var i = 0; i < blobManager.Entries.Count; i++)
+            // {
+            //     var entryBytes = blobManager.GetRawEntry(i);
+            //     File.WriteAllBytes($"dbg_entry_{i}.bin", entryBytes);
+            // }
 
             _sb.AppendLine($"Shader \"{name}\" {{");
             _sb.Indent();
@@ -203,7 +203,7 @@ namespace USCSandbox.Processor
                 var index = basket.index;
 
                 var subProg = blobManager.GetShaderSubProgram((int)subProgInfo.BlobIndex);
-                File.WriteAllBytes($"dbg_entry_data_{subProgInfo.BlobIndex}.bin", subProg.ProgramData);
+                // File.WriteAllBytes($"dbg_entry_data_{subProgInfo.BlobIndex}.bin", subProg.ProgramData);
 
                 ShaderParams param;
                 if (index != -1)
